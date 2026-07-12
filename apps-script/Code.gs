@@ -152,10 +152,18 @@ function doPost(e) {
       sheet.getRange(targetRow, 1).setNumberFormat(sourceFormat);
     }
 
+    sortDataByDate(sheet, targetRow);
+
     return jsonOutput({ success: true, sheet: sheetName, row: targetRow });
   } catch (err) {
     return jsonOutput({ success: false, error: String(err) });
   }
+}
+
+// 依日期（A欄）把交易資料（A~F欄）由舊到新排序，讓補登較早日期的資料也會自動排到正確位置
+function sortDataByDate(sheet, lastDataRow) {
+  if (lastDataRow <= 2) return;
+  sheet.getRange(2, 1, lastDataRow - 1, 6).sort({ column: 1, ascending: true });
 }
 
 // 以「日期」欄（A欄）判斷第一個空白列，避免受 H/I 欄的統計表影響
