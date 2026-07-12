@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expense-tracker-v1';
+const CACHE_NAME = 'expense-tracker-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -33,7 +33,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first for app shell files so edits show up on next load;
+  // fall back to cache only when offline.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

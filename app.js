@@ -22,6 +22,7 @@ const urlInput = document.getElementById('webapp-url');
 const saveUrlBtn = document.getElementById('save-url-btn');
 
 let sheetTouchedByUser = false;
+let latestSheets = [];
 
 function getWebAppUrl() {
   return localStorage.getItem(STORAGE_KEYS.webAppUrl) || '';
@@ -46,23 +47,30 @@ function todayLocalISO() {
   return local.toISOString().slice(0, 10);
 }
 
-function populateSheetSelect(sheets) {
+// 分頁清單一律加上「當月分頁」這個選項，即使 Google Sheet 裡還沒建立也能選，
+// 送出時後端會用最接近的月份分頁自動複製格式建立它（旅行等自訂分頁名稱不會出現在這裡，要等實際建立後才會出現）
+function refreshSheetOptions() {
   const preferred = defaultSheetNameForDate(dateInput.value);
+  const names = latestSheets.includes(preferred) ? latestSheets.slice() : [...latestSheets, preferred];
   const lastUsed = localStorage.getItem(STORAGE_KEYS.lastSheet);
+  const currentSelection = sheetSelect.value;
+
   sheetSelect.innerHTML = '';
-  sheets.forEach((name) => {
+  names.forEach((name) => {
     const opt = document.createElement('option');
     opt.value = name;
-    opt.textContent = name;
+    opt.textContent = latestSheets.includes(name) ? name : `${name}（尚未建立，送出時自動建立）`;
     sheetSelect.appendChild(opt);
   });
 
   if (!sheetTouchedByUser) {
-    if (sheets.includes(preferred)) {
+    if (names.includes(preferred)) {
       sheetSelect.value = preferred;
-    } else if (lastUsed && sheets.includes(lastUsed)) {
+    } else if (lastUsed && names.includes(lastUsed)) {
       sheetSelect.value = lastUsed;
     }
+  } else if (names.includes(currentSelection)) {
+    sheetSelect.value = currentSelection;
   }
 }
 
@@ -70,7 +78,8 @@ async function loadSheetList() {
   const url = getWebAppUrl();
   const cached = localStorage.getItem(STORAGE_KEYS.cachedSheets);
   if (cached) {
-    populateSheetSelect(JSON.parse(cached));
+    latestSheets = JSON.parse(cached);
+    refreshSheetOptions();
   }
   if (!url) return;
 
@@ -79,7 +88,8 @@ async function loadSheetList() {
     const data = await res.json();
     if (data.success && Array.isArray(data.sheets)) {
       localStorage.setItem(STORAGE_KEYS.cachedSheets, JSON.stringify(data.sheets));
-      populateSheetSelect(data.sheets);
+      latestSheets = data.sheets;
+      refreshSheetOptions();
     }
   } catch (err) {
     if (!cached) setStatus('無法載入分頁清單，請檢查網路或 Web App 網址', 'error');
@@ -94,12 +104,7 @@ function restoreStickyFields() {
 }
 
 dateInput.addEventListener('change', () => {
-  if (!sheetTouchedByUser) {
-    const preferred = defaultSheetNameForDate(dateInput.value);
-    if ([...sheetSelect.options].some((o) => o.value === preferred)) {
-      sheetSelect.value = preferred;
-    }
-  }
+  refreshSheetOptions();
 });
 
 sheetSelect.addEventListener('change', () => {
@@ -144,6 +149,7 @@ form.addEventListener('submit', async (e) => {
       amountInput.value = '';
       noteInput.value = '';
       itemInput.focus();
+      loadSheetList();
     } else {
       setStatus('寫入失敗：' + (data.error || '未知錯誤'), 'error');
     }

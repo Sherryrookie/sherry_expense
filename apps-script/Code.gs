@@ -45,6 +45,12 @@ function createNewMonthSheet() {
     return;
   }
 
+  duplicateMonthSheet(ss, templateSheet, newName);
+  ui.alert('已建立「' + newName + '」分頁，格式跟「' + templateName + '」一致。');
+}
+
+// 複製來源分頁（保留下拉選單、色塊、公式），清空交易資料列後以新名稱插入在來源分頁後面
+function duplicateMonthSheet(ss, templateSheet, newName) {
   var newSheet = templateSheet.copyTo(ss);
   newSheet.setName(newName);
 
@@ -56,8 +62,51 @@ function createNewMonthSheet() {
 
   ss.setActiveSheet(newSheet);
   ss.moveActiveSheet(templateSheet.getIndex() + 1);
+  return newSheet;
+}
 
-  ui.alert('已建立「' + newName + '」分頁，格式跟「' + templateName + '」一致。');
+var MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var MONTH_PATTERN = /^([A-Za-z]{3}), (\d{2})$/;
+
+function parseMonthSheetName(name) {
+  var m = MONTH_PATTERN.exec(name);
+  if (!m) return null;
+  var monthIndex = MONTH_ABBR.indexOf(m[1]);
+  if (monthIndex === -1) return null;
+  return { date: new Date(2000 + Number(m[2]), monthIndex, 1), label: name };
+}
+
+// 找出跟目標月份分頁（例如 "Aug, 26"）最接近的既有月份分頁，優先選最近的「之前」月份，
+// 作為自動建立新分頁時要複製格式的樣板
+function findClosestMonthSheet(ss, targetName) {
+  var target = parseMonthSheetName(targetName);
+  if (!target) return null;
+
+  var candidates = ss.getSheets()
+    .map(function (s) { return { sheet: s, info: parseMonthSheetName(s.getName()) }; })
+    .filter(function (c) { return c.info && c.info.label !== targetName; });
+
+  var past = candidates.filter(function (c) { return c.info.date <= target.date; });
+  var pool = past.length ? past : candidates;
+  if (!pool.length) return null;
+
+  pool.sort(function (a, b) {
+    return Math.abs(target.date - a.info.date) - Math.abs(target.date - b.info.date);
+  });
+  return pool[0].sheet;
+}
+
+// 若目標分頁（例如 "Aug, 26"）尚未建立，且名稱符合「月份, 年」的格式，
+// 就自動複製最接近的月份分頁來建立它；旅行分頁等自訂名稱無法自動建立，維持原本錯誤訊息
+function ensureSheetExists(ss, sheetName) {
+  var sheet = ss.getSheetByName(sheetName);
+  if (sheet) return sheet;
+  if (!MONTH_PATTERN.test(sheetName)) return null;
+
+  var template = findClosestMonthSheet(ss, sheetName);
+  if (!template) return null;
+
+  return duplicateMonthSheet(ss, template, sheetName);
 }
 
 function doGet(e) {
@@ -76,10 +125,10 @@ function doPost(e) {
     var payload = JSON.parse(e.postData.contents);
     var sheetName = payload.sheetName;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(sheetName);
+    var sheet = ensureSheetExists(ss, sheetName);
 
     if (!sheet) {
-      return jsonOutput({ success: false, error: '找不到分頁：' + sheetName });
+      return jsonOutput({ success: false, error: '找不到分頁，且無法自動建立：' + sheetName });
     }
     if (!payload.date || !payload.item || payload.amount === undefined || payload.amount === '') {
       return jsonOutput({ success: false, error: '日期、項目、金額為必填' });
