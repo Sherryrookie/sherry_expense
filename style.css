@@ -1,0 +1,135 @@
+:root {
+  --brand: #2E7D32;
+  --brand-dark: #1B5E20;
+  --bg: #F5F7F5;
+  --card: #FFFFFF;
+  --text: #1A1A1A;
+  --muted: #6B7280;
+  --border: #E2E5E2;
+  --error: #C62828;
+  --ok: #2E7D32;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121412;
+    --card: #1C1F1C;
+    --text: #F0F2F0;
+    --muted: #9CA39C;
+    --border: #2C302C;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--brand);
+  color: white;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+#entry-form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+input, select {
+  font-size: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+}
+
+button {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--brand);
+  color: white;
+  cursor: pointer;
+}
+
+button:active { background: var(--brand-dark); }
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 14px;
+  min-height: 20px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.status.ok { color: var(--ok); }
+.status.error { color: var(--error); }
+
+.settings {
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.settings summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.settings label {
+  margin-top: 10px;
+}
+
+.settings button {
+  margin-top: 10px;
+  background: var(--muted);
+}

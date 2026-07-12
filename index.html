@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#2E7D32" />
+<title>美國記帳</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="記帳" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="topbar">
+  <h1>美國記帳</h1>
+</header>
+
+<main>
+  <form id="entry-form">
+    <label>
+      日期
+      <input type="date" id="date" required />
+    </label>
+
+    <label>
+      項目
+      <input type="text" id="item" placeholder="例如：星巴克" required />
+    </label>
+
+    <label>
+      金額
+      <input type="number" id="amount" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required />
+    </label>
+
+    <label>
+      管道
+      <select id="channel" required>
+        <option value="Chase">Chase</option>
+        <option value="Chase Credit">Chase Credit</option>
+        <option value="BOA">BOA</option>
+        <option value="BOA Credit">BOA Credit</option>
+        <option value="Cash">Cash</option>
+        <option value="Apple Credit">Apple Credit</option>
+        <option value="Citi Credit">Citi Credit</option>
+      </select>
+    </label>
+
+    <label>
+      分類
+      <select id="category" required>
+        <option value="住宿">住宿</option>
+        <option value="保險">保險</option>
+        <option value="學費">學費</option>
+        <option value="生活費">生活費</option>
+        <option value="超市">超市</option>
+        <option value="外飲食">外飲食</option>
+        <option value="娛樂">娛樂</option>
+        <option value="交通">交通</option>
+        <option value="旅遊">旅遊</option>
+        <option value="其他">其他</option>
+      </select>
+    </label>
+
+    <label>
+      分頁
+      <select id="sheet" required></select>
+    </label>
+
+    <label>
+      備註
+      <input type="text" id="note" placeholder="選填" />
+    </label>
+
+    <button type="submit" id="submit-btn">送出</button>
+  </form>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <details class="settings">
+    <summary>設定</summary>
+    <label>
+      Google Apps Script Web App URL
+      <input type="url" id="webapp-url" placeholder="https://script.google.com/macros/s/xxx/exec" />
+    </label>
+    <button type="button" id="save-url-btn">儲存</button>
+  </details>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
