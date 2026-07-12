@@ -4,6 +4,7 @@
  */
 
 var SUMMARY_SHEET_NAME = '總表';
+var SCRIPT_VERSION = 'v4-sort-by-date';
 
 // 開啟試算表時加上「記帳工具」選單，方便一鍵建立新月份分頁
 function onOpen() {
@@ -116,7 +117,7 @@ function doGet(e) {
     .filter(function (name) { return name !== SUMMARY_SHEET_NAME; });
 
   return ContentService
-    .createTextOutput(JSON.stringify({ success: true, sheets: sheets }))
+    .createTextOutput(JSON.stringify({ success: true, sheets: sheets, version: SCRIPT_VERSION }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
