@@ -48,10 +48,25 @@ function doPost(e) {
       sheet.getRange(targetRow, 1).setNumberFormat(sourceFormat);
     }
 
+    applyDropdownStyle(sheet, targetRow);
+
     return jsonOutput({ success: true, sheet: sheetName, row: targetRow });
   } catch (err) {
     return jsonOutput({ success: false, error: String(err) });
   }
+}
+
+// 把管道（D欄）、分類（E欄）的下拉選單規則（含色塊樣式）從第2列複製到新增列，
+// 讓 API 寫入的資料看起來跟手動用下拉選單填的一樣
+var DROPDOWN_REFERENCE_ROW = 2;
+var DROPDOWN_COLUMNS = [4, 5];
+
+function applyDropdownStyle(sheet, targetRow) {
+  if (targetRow === DROPDOWN_REFERENCE_ROW) return;
+  DROPDOWN_COLUMNS.forEach(function (col) {
+    var rule = sheet.getRange(DROPDOWN_REFERENCE_ROW, col).getDataValidation();
+    if (rule) sheet.getRange(targetRow, col).setDataValidation(rule);
+  });
 }
 
 // 以「日期」欄（A欄）判斷第一個空白列，避免受 H/I 欄的統計表影響
