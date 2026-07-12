@@ -5,6 +5,61 @@
 
 var SUMMARY_SHEET_NAME = '總表';
 
+// 開啟試算表時加上「記帳工具」選單，方便一鍵建立新月份分頁
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('記帳工具')
+    .addItem('建立新月份分頁（複製舊分頁格式）', 'createNewMonthSheet')
+    .addToUi();
+}
+
+// 複製指定的舊分頁（保留下拉選單、色塊、公式），清空交易資料列後，
+// 用新名稱插入在來源分頁後面，這樣新月份分頁就會跟舊的一樣有完整格式
+function createNewMonthSheet() {
+  var ui = SpreadsheetApp.getUi();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var templateResp = ui.prompt(
+    '建立新月份分頁',
+    '請輸入要複製格式的來源分頁名稱（例如：Jun, 26）',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (templateResp.getSelectedButton() !== ui.Button.OK) return;
+  var templateName = templateResp.getResponseText().trim();
+  var templateSheet = ss.getSheetByName(templateName);
+  if (!templateSheet) {
+    ui.alert('找不到分頁：' + templateName);
+    return;
+  }
+
+  var nameResp = ui.prompt(
+    '建立新月份分頁',
+    '請輸入新分頁的名稱（例如：Aug, 26）',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (nameResp.getSelectedButton() !== ui.Button.OK) return;
+  var newName = nameResp.getResponseText().trim();
+  if (!newName) return;
+  if (ss.getSheetByName(newName)) {
+    ui.alert('已經有同名分頁了：' + newName);
+    return;
+  }
+
+  var newSheet = templateSheet.copyTo(ss);
+  newSheet.setName(newName);
+
+  // 清空交易資料（A~F欄），保留表頭、下拉選單設定與統計公式
+  var lastRow = newSheet.getLastRow();
+  if (lastRow > 1) {
+    newSheet.getRange(2, 1, lastRow - 1, 6).clearContent();
+  }
+
+  ss.setActiveSheet(newSheet);
+  ss.moveActiveSheet(templateSheet.getIndex() + 1);
+
+  ui.alert('已建立「' + newName + '」分頁，格式跟「' + templateName + '」一致。');
+}
+
 function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = ss.getSheets()
